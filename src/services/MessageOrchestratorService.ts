@@ -4,6 +4,7 @@ import type { ChatService } from './ChatService';
 import type { CommandParserService } from './CommandParserService';
 import type { CommandRouterService } from './CommandRouterService';
 import type { UserService } from './UserService';
+import type { WelcomeService } from './WelcomeService';
 import { logger } from '../config/logger';
 
 export interface IncomingMessage {
@@ -19,15 +20,19 @@ export class MessageOrchestratorService {
     private readonly parser: CommandParserService,
     private readonly router: CommandRouterService,
     private readonly chatService: ChatService,
+    private readonly welcomeService: WelcomeService,
   ) {}
 
   async handle(incoming: IncomingMessage): Promise<string> {
     const body = sanitizeText(incoming.body);
     if (!body) {
-      return 'Mensagem vazia. Envie /help para ver os comandos.';
+      return this.welcomeService.buildWelcome(incoming.name);
     }
 
-    const user = await this.userService.resolveFromPhone(incoming.phone, incoming.name);
+    const { user, isNew } = await this.userService.resolveFromPhone(
+      incoming.phone,
+      incoming.name,
+    );
 
     await this.messageRepository.create({
       userId: user.id,
@@ -36,9 +41,18 @@ export class MessageOrchestratorService {
     });
 
     try {
+      const wantsWelcome = isNew || this.welcomeService.isGreeting(body);
       const parsed = this.parser.parse(body);
+      const isRealCommand = parsed.isCommand && parsed.name !== null;
 
-      if (parsed.isCommand && parsed.name) {
+      // Novo contato ou saudação → apresentação + menu
+      if (wantsWelcome && !isRealCommand) {
+        const welcome = this.welcomeService.buildWelcome(user.name ?? incoming.name);
+        await this.persistOutbound(user.id, welcome, 'welcome');
+        return welcome;
+      }
+
+      if (isRealCommand && parsed.name) {
         const result = await this.router.route(parsed.name, {
           userId: user.id,
           phone: user.phone,
@@ -46,24 +60,19 @@ export class MessageOrchestratorService {
           rawMessage: body,
         });
 
-        await this.messageRepository.create({
-          userId: user.id,
-          direction: 'outbound',
-          content: result.reply,
-          command: parsed.name,
-        });
+        // Primeiro contato já veio com comando: apresenta + executa
+        const reply =
+          isNew && parsed.name !== 'help'
+            ? `${this.welcomeService.buildWelcome(user.name ?? incoming.name)}\n\n---\n\n${result.reply}`
+            : result.reply;
 
-        return result.reply;
+        await this.persistOutbound(user.id, reply, parsed.name);
+        return reply;
       }
 
       const flowResult = await this.router.continueActiveFlow(user.id, body);
       if (flowResult) {
-        await this.messageRepository.create({
-          userId: user.id,
-          direction: 'outbound',
-          content: flowResult.reply,
-          command: 'flow',
-        });
+        await this.persistOutbound(user.id, flowResult.reply, 'flow');
         return flowResult.reply;
       }
 
@@ -73,13 +82,21 @@ export class MessageOrchestratorService {
       logger.error('Falha ao processar mensagem', { error: message, phone: user.phone });
       const reply =
         'Ocorreu um erro ao processar sua solicitação. Tente novamente em instantes.';
-      await this.messageRepository.create({
-        userId: user.id,
-        direction: 'outbound',
-        content: reply,
-        command: 'error',
-      });
+      await this.persistOutbound(user.id, reply, 'error');
       return reply;
     }
+  }
+
+  private async persistOutbound(
+    userId: string,
+    content: string,
+    command: string,
+  ): Promise<void> {
+    await this.messageRepository.create({
+      userId,
+      direction: 'outbound',
+      content,
+      command,
+    });
   }
 }

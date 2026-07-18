@@ -8,6 +8,7 @@ import { MetricsService } from './services/MetricsService';
 import { OpenAIService } from './services/OpenAIService';
 import { UserService } from './services/UserService';
 import { UsageService } from './services/UsageService';
+import { WelcomeService } from './services/WelcomeService';
 import { ApiCommandService } from './services/commands/ApiCommandService';
 import { BddCommandService } from './services/commands/BddCommandService';
 import { BugCommandService } from './services/commands/BugCommandService';
@@ -109,12 +110,14 @@ export function createContainer(): AppContainer {
     regressionCommand,
   );
 
+  const welcomeService = new WelcomeService();
   const messageOrchestrator = new MessageOrchestratorService(
     userService,
     messageRepository,
     parser,
     router,
     chatService,
+    welcomeService,
   );
 
   return {

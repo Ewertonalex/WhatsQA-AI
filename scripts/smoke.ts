@@ -84,6 +84,7 @@ async function run(): Promise<void> {
     detail: `status=${help.status} replyLength=${helpReply.length}`,
   });
 
+  const bugPhone = `55118${Date.now().toString().slice(-8)}`;
   const bugStart = await request('/api/chat/simulate', {
     method: 'POST',
     headers: {
@@ -91,7 +92,8 @@ async function run(): Promise<void> {
       'x-admin-token': TOKEN,
     },
     body: JSON.stringify({
-      phone: '5511888777666',
+      phone: bugPhone,
+      name: 'QA Smoke',
       message: '/bug',
     }),
   });
@@ -100,6 +102,30 @@ async function run(): Promise<void> {
     name: 'POST /api/chat/simulate /bug (início fluxo)',
     ok: bugStart.status === 200 && bugReply.toLowerCase().includes('título'),
     detail: `status=${bugStart.status}`,
+  });
+
+  const welcomePhone = `55119${Date.now().toString().slice(-8)}`;
+  const welcome = await request('/api/chat/simulate', {
+    method: 'POST',
+    headers: {
+      'content-type': 'application/json',
+      'x-admin-token': TOKEN,
+    },
+    body: JSON.stringify({
+      phone: welcomePhone,
+      name: 'Novo Usuario',
+      message: 'oi',
+    }),
+  });
+  const welcomeReply = (welcome.json as { reply?: string })?.reply ?? '';
+  results.push({
+    name: 'POST /api/chat/simulate boas-vindas (novo usuário)',
+    ok:
+      welcome.status === 200 &&
+      welcomeReply.includes('WhatsQA AI') &&
+      welcomeReply.includes('/bug') &&
+      welcomeReply.toLowerCase().includes('deseja'),
+    detail: `status=${welcome.status} replyLength=${welcomeReply.length}`,
   });
 
   let failed = 0;
