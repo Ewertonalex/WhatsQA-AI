@@ -16,7 +16,9 @@
     "test:coverage": "jest --coverage",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
+    "prisma:migrate:deploy": "prisma migrate deploy",
     "prisma:studio": "prisma studio",
+    "postinstall": "prisma generate",
     "typecheck": "tsc --noEmit"
   },
   "engines": {

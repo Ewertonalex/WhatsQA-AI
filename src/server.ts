@@ -1,19 +1,17 @@
 import type { Server } from 'http';
-import { createApp } from './app';
 import { APP_NAME } from './config/constants';
+import { getEnv } from './config/env';
+import { logger } from './config/logger';
+import { createApp } from './app';
+import type { AppContainer } from './container';
 
-const DEFAULT_PORT = 3000;
+export function startServer(container: AppContainer, port?: number): Server {
+  const env = getEnv();
+  const listenPort = port ?? env.PORT;
+  const app = createApp(container);
 
-/**
- * Sobe o servidor HTTP.
- * Bootstrap do WhatsApp e DI entram nos módulos M11/M12.
- */
-export function startServer(port: number = DEFAULT_PORT): Server {
-  const app = createApp();
-
-  const server = app.listen(port, () => {
-    // eslint-disable-next-line no-console
-    console.log(`[${APP_NAME}] HTTP listening on port ${port}`);
+  const server = app.listen(listenPort, () => {
+    logger.info(`[${APP_NAME}] HTTP listening`, { port: listenPort });
   });
 
   return server;

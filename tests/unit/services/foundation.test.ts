@@ -6,9 +6,13 @@ import {
   SUPPORTED_COMMANDS,
 } from '../../../src/config/constants';
 import { createApp } from '../../../src/app';
+import { createContainer } from '../../../src/container';
 import request from 'supertest';
 
-describe('M1 — Fundação', () => {
+describe('Fundação + HTTP', () => {
+  const container = createContainer();
+  const app = createApp(container);
+
   it('deve expor constantes do produto', () => {
     expect(APP_NAME).toBe('WhatsQA AI');
     expect(APP_TAGLINE).toBe('SUPORTE TECH PARA QA');
@@ -20,7 +24,6 @@ describe('M1 — Fundação', () => {
   });
 
   it('deve responder healthcheck', async () => {
-    const app = createApp();
     const response = await request(app).get('/health');
 
     expect(response.status).toBe(200);
@@ -28,12 +31,10 @@ describe('M1 — Fundação', () => {
       status: 'ok',
       service: 'WhatsQA AI',
       tagline: 'SUPORTE TECH PARA QA',
-      module: 'foundation',
     });
   });
 
   it('deve servir assets de marca', async () => {
-    const app = createApp();
     const logo = await request(app).get('/assets/brand/logo.png');
     const banner = await request(app).get('/assets/brand/banner.png');
 
@@ -41,5 +42,21 @@ describe('M1 — Fundação', () => {
     expect(logo.headers['content-type']).toMatch(/image\/png/);
     expect(banner.status).toBe(200);
     expect(banner.headers['content-type']).toMatch(/image\/png/);
+  });
+
+  it('deve proteger métricas sem token', async () => {
+    const response = await request(app).get('/api/metrics');
+    expect(response.status).toBe(401);
+  });
+
+  it('deve retornar métricas com token', async () => {
+    const response = await request(app)
+      .get('/api/metrics')
+      .set('x-admin-token', 'test-dashboard-token');
+
+    expect(response.status).toBe(200);
+    expect(response.body).toHaveProperty('users');
+    expect(response.body).toHaveProperty('messages');
+    expect(response.body).toHaveProperty('tokens');
   });
 });

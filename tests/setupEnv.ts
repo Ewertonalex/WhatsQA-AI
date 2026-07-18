@@ -1,0 +1,13 @@
+process.env.BOT_NAME = 'WhatsQA AI';
+process.env.OPENAI_API_KEY = 'sk-test-key-for-jest';
+process.env.OPENAI_MODEL = 'gpt-4o-mini';
+process.env.MAX_TOKENS = '1024';
+process.env.TEMPERATURE = '0.2';
+process.env.DATABASE_URL = 'file:./dev.db';
+process.env.SESSION_NAME = 'whatsqa-test';
+process.env.ADMIN_NUMBER = '5511999999999';
+process.env.LOG_LEVEL = 'error';
+process.env.PORT = '3000';
+process.env.NODE_ENV = 'test';
+process.env.ENABLE_WHATSAPP = 'false';
+process.env.DASHBOARD_TOKEN = 'test-dashboard-token';

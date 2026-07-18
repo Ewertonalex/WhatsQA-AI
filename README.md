@@ -8,100 +8,82 @@
   <img src="public/assets/brand/logo.png" alt="Logo WhatsQA AI" width="280" />
 </p>
 
-Assistente inteligente especializado em **Engenharia de Qualidade de Software (QA)**, com interface inicial via WhatsApp e dashboard administrativo web.
+Assistente inteligente especializado em **Engenharia de Qualidade de Software (QA)**, com interface via WhatsApp e dashboard administrativo web.
 
 **Tagline:** SUPORTE TECH PARA QA
 
-> Projeto profissional, orientado a Clean Architecture, SOLID, tipagem estrita e evolução para SaaS.
-
 ## Stack
 
-- Node.js + TypeScript
-- Express
+- Node.js + TypeScript (strict)
+- Express + Helmet + CORS + Rate Limit
 - Prisma ORM + SQLite (pronto para PostgreSQL)
-- OpenAI API
+- OpenAI API (somente via `OpenAIService`)
 - whatsapp-web.js (LocalAuth)
 - Winston, Zod, Jest, ESLint, Prettier
 - Docker
 
-## Estrutura
+## Arquitetura
+
+Clean Architecture + SOLID + Repository Pattern + Service Layer.
 
 ```text
-src/
-  config/          # Env, logger, constants
-  controllers/     # HTTP controllers
-  services/        # Regras de negócio / comandos QA
-  repositories/    # Persistência (Repository Pattern)
-  entities/        # Entidades de domínio
-  database/        # Prisma client
-  middlewares/     # Express middlewares
-  routes/          # Rotas HTTP
-  prompts/         # Prompts por comando
-  utils/           # Helpers
-  types/           # Tipos compartilhados
-  validators/      # Schemas Zod
-  interfaces/      # Contratos (SOLID)
-  whatsapp/        # Cliente e handlers WhatsApp
-  dashboard/       # Camada do dashboard
-tests/
-prisma/
-imagens/           # Originais de marca (banner/logo)
-public/assets/brand/  # Assets servidos no dashboard/README
-sessions/          # LocalAuth (não versionar)
-logs/              # Winston (não versionar)
+WhatsApp / HTTP → Controllers/Handlers → Services → OpenAIService / Repositories → Prisma/SQLite
 ```
 
-## Pré-requisitos
-
-- Node.js >= 20
-- npm
-- Conta OpenAI
-- Chrome/Chromium (para whatsapp-web.js)
-
-## Setup rápido (M1)
+## Setup
 
 ```bash
 cp .env.example .env
+# preencha OPENAI_API_KEY e ADMIN_NUMBER
+
 npm install
-npm run typecheck
+npx prisma migrate dev
 npm test
 npm run dev
 ```
 
-Healthcheck:
+- API/Health: http://localhost:3000/health  
+- Dashboard: http://localhost:3000  
+- Token: header `x-admin-token` = `DASHBOARD_TOKEN` (ou `ADMIN_NUMBER`)
 
-```bash
-curl http://localhost:3000/health
+### WhatsApp
+
+1. `ENABLE_WHATSAPP=true`
+2. Ao iniciar, escaneie o QR Code no terminal
+3. A sessão fica em `sessions/{SESSION_NAME}` (migrável entre PCs)
+4. Trocar o chip/número = nova autenticação QR; a lógica do bot não muda
+
+Para rodar só API/dashboard:
+
+```env
+ENABLE_WHATSAPP=false
 ```
 
-## Variáveis de ambiente
+### Simular mensagem (sem WhatsApp)
 
-Veja `.env.example`:
+```bash
+curl -X POST http://localhost:3000/api/chat/simulate \
+  -H "Content-Type: application/json" \
+  -H "x-admin-token: change-me-dashboard-token" \
+  -d "{\"phone\":\"5511999999999\",\"message\":\"/help\"}"
+```
 
-- `BOT_NAME`
-- `OPENAI_API_KEY`
-- `DATABASE_URL`
-- `SESSION_NAME`
-- `ADMIN_NUMBER`
-- `LOG_LEVEL`
-- `OPENAI_MODEL`
-- `MAX_TOKENS`
-- `TEMPERATURE`
-- `PORT`
+## Comandos
 
-A sessão WhatsApp **não depende do número do chip**. Trocar o número = nova autenticação via QR Code (`SESSION_NAME` / pasta `sessions/`).
+`/help` `/bug` `/teste` `/bdd` `/api` `/sql` `/cypress` `/postman` `/regressao` `/checklist` `/plano` `/riscos` `/story` `/swagger` `/explicar`
+
+- `/bug` — fluxo conversacional guiado
+- `/regressao` — checklist por módulos; marcar com `feito 1,3`
 
 ## Scripts
 
 | Script | Descrição |
 |--------|-----------|
-| `npm run dev` | Desenvolvimento com reload |
-| `npm run build` | Compila TypeScript |
-| `npm start` | Executa build |
+| `npm run dev` | Dev com reload |
+| `npm run build` / `npm start` | Produção |
 | `npm test` | Jest |
 | `npm run lint` | ESLint |
-| `npm run format` | Prettier |
-| `npm run typecheck` | `tsc --noEmit` |
+| `npx prisma studio` | UI do banco |
 
 ## Docker
 
@@ -109,23 +91,12 @@ A sessão WhatsApp **não depende do número do chip**. Trocar o número = nova 
 docker compose up --build
 ```
 
-Volumes persistentes: `sessions/`, `logs/`, banco Prisma.
+## Segurança
 
-## Ordem de implementação
-
-1. **M1** Fundação (este módulo)
-2. M2 Config + Logger
-3. M3 Database + Prisma
-4. M4 Repositories
-5. M5 OpenAIService
-6. M6 Domain services base
-7. M7 Command Parser + Router
-8. M8–M10 Comandos QA
-9. M11 WhatsApp Client
-10. M12 Express completo
-11. M13 Dashboard
-12. M14 Hardening
+- Nunca commitar `.env`
+- API Key só em variável de ambiente
+- Dashboard protegido por token admin
 
 ## Licença
 
-UNLICENSED — uso interno / produto comercial.
+UNLICENSED

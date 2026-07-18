@@ -1,6 +1,5 @@
 /**
  * Shape tipado das variáveis de ambiente do WhatsQA AI.
- * Validação runtime será feita no módulo M2 (config/env.ts com Zod).
  */
 export interface AppEnv {
   BOT_NAME: string;
@@ -11,7 +10,7 @@ export interface AppEnv {
   DATABASE_URL: string;
   SESSION_NAME: string;
   ADMIN_NUMBER: string;
-  LOG_LEVEL: string;
+  LOG_LEVEL: 'error' | 'warn' | 'info' | 'http' | 'verbose' | 'debug' | 'silly';
   PORT: number;
   NODE_ENV: 'development' | 'test' | 'production';
 }

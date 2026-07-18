@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>WhatsQA AI — Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700&family=Sora:wght@600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/dashboard.css" />
+  </head>
+  <body>
+    <div class="bg"></div>
+    <header class="hero">
+      <img src="/assets/brand/logo.png" alt="WhatsQA AI" class="logo" />
+      <div>
+        <h1>WhatsQA AI</h1>
+        <p>SUPORTE TECH PARA QA — Painel administrativo</p>
+      </div>
+    </header>
+
+    <section class="auth">
+      <label for="token">Token admin</label>
+      <input id="token" type="password" placeholder="DASHBOARD_TOKEN ou ADMIN_NUMBER" />
+      <button id="loadBtn" type="button">Carregar métricas</button>
+      <span id="status"></span>
+    </section>
+
+    <main id="content" class="hidden">
+      <section class="grid" id="kpi"></section>
+
+      <section class="panel">
+        <h2>Comandos mais usados</h2>
+        <ul id="commands"></ul>
+      </section>
+
+      <section class="panel">
+        <h2>Últimos usuários</h2>
+        <ul id="users"></ul>
+      </section>
+
+      <section class="panel">
+        <h2>Uso diário</h2>
+        <ul id="daily"></ul>
+      </section>
+
+      <section class="panel">
+        <h2>Uso mensal</h2>
+        <ul id="monthly"></ul>
+      </section>
+
+      <section class="panel">
+        <h2>Erros recentes</h2>
+        <ul id="errors"></ul>
+      </section>
+    </main>
+
+    <script src="/dashboard.js"></script>
+  </body>
+</html>

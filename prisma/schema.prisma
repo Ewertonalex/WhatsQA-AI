@@ -1,0 +1,147 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String         @id @default(uuid())
+  phone         String         @unique
+  name          String?
+  isAdmin       Boolean        @default(false)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  messages      Message[]
+  conversations Conversation[]
+  commands      Command[]
+  history       History[]
+  preferences   Preference[]
+  sessions      Session[]
+  logs          Log[]
+  usage         Usage[]
+}
+
+model Conversation {
+  id        String    @id @default(uuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String?
+  flow      String    @default("none")
+  stateJson String    @default("{}")
+  isActive  Boolean   @default(true)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  messages  Message[]
+
+  @@index([userId, isActive])
+}
+
+model Message {
+  id             String        @id @default(uuid())
+  userId         String
+  conversationId String?
+  user           User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  conversation   Conversation? @relation(fields: [conversationId], references: [id], onDelete: SetNull)
+  direction      String
+  content        String
+  command        String?
+  metadataJson   String        @default("{}")
+  createdAt      DateTime      @default(now())
+
+  @@index([userId, createdAt])
+  @@index([conversationId])
+}
+
+model Command {
+  id           String   @id @default(uuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name         String
+  args         String?
+  success      Boolean  @default(true)
+  durationMs   Int      @default(0)
+  createdAt    DateTime @default(now())
+
+  @@index([name, createdAt])
+  @@index([userId, createdAt])
+}
+
+model History {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  kind      String
+  title     String
+  content   String
+  metadataJson String @default("{}")
+  createdAt DateTime @default(now())
+
+  @@index([userId, kind, createdAt])
+}
+
+model Preference {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  key       String
+  valueJson String
+  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now())
+
+  @@unique([userId, key])
+}
+
+model Session {
+  id           String    @id @default(uuid())
+  userId       String?
+  user         User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+  sessionName  String
+  status       String    @default("pending")
+  lastSeenAt   DateTime?
+  metadataJson String    @default("{}")
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@index([sessionName, status])
+}
+
+model Log {
+  id             String   @id @default(uuid())
+  userId         String?
+  user           User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  level          String
+  event          String
+  prompt         String?
+  response       String?
+  model          String?
+  tokens         Int?
+  durationMs     Int?
+  errorMessage   String?
+  metadataJson   String   @default("{}")
+  createdAt      DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([level, createdAt])
+  @@index([userId, createdAt])
+}
+
+model Usage {
+  id               String   @id @default(uuid())
+  userId           String?
+  user             User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  model            String
+  command          String?
+  promptTokens     Int
+  completionTokens Int
+  totalTokens      Int
+  estimatedCostUsd Float
+  durationMs       Int
+  createdAt        DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([userId, createdAt])
+  @@index([command, createdAt])
+}
