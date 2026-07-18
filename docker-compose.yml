@@ -1,0 +1,18 @@
+services:
+  whatsqa-ai:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: whatsqa-ai
+    restart: unless-stopped
+    ports:
+      - '${PORT:-3000}:3000'
+    env_file:
+      - .env
+    volumes:
+      - ./sessions:/app/sessions
+      - ./logs:/app/logs
+      - ./prisma:/app/prisma
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=file:./dev.db

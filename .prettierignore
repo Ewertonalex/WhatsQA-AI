@@ -1,0 +1,8 @@
+dist
+node_modules
+sessions
+logs
+coverage
+prisma/migrations
+*.db
+package-lock.json
