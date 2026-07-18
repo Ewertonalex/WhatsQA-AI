@@ -3,6 +3,7 @@ import { Client, LocalAuth } from 'whatsapp-web.js';
 import { logger } from '../config/logger';
 import type { ISessionRepository } from '../interfaces/repositories/ISessionRepository';
 import type { MessageOrchestratorService } from '../services/MessageOrchestratorService';
+import { resolveChromeExecutable } from '../utils/chromePath';
 import { MessageHandler } from './MessageHandler';
 import { getSessionName, getSessionPath } from './session';
 
@@ -17,6 +18,15 @@ export class WhatsAppClient {
   async start(): Promise<void> {
     const sessionName = getSessionName();
     const dataPath = getSessionPath();
+    const executablePath = resolveChromeExecutable();
+
+    if (!executablePath) {
+      throw new Error(
+        'Chrome/Chromium não encontrado. Instale o Google Chrome ou defina CHROME_PATH / PUPPETEER_EXECUTABLE_PATH.',
+      );
+    }
+
+    logger.info('Iniciando WhatsApp com Chrome local', { executablePath, sessionName });
 
     this.client = new Client({
       authStrategy: new LocalAuth({
@@ -25,6 +35,7 @@ export class WhatsAppClient {
       }),
       puppeteer: {
         headless: true,
+        executablePath,
         args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
       },
     });

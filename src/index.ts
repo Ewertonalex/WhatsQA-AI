@@ -14,7 +14,15 @@ async function bootstrap(): Promise<void> {
 
   if (env.ENABLE_WHATSAPP) {
     whatsapp = new WhatsAppClient(container.messageOrchestrator, container.sessionRepository);
-    await whatsapp.start();
+    try {
+      await whatsapp.start();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Falha ao iniciar WhatsApp';
+      logger.error('WhatsApp não iniciou; API/dashboard continuam disponíveis', {
+        error: message,
+      });
+      whatsapp = null;
+    }
   } else {
     logger.warn('WhatsApp desabilitado (ENABLE_WHATSAPP=false)');
   }

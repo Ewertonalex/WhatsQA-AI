@@ -75,7 +75,23 @@ curl -X POST http://localhost:3000/api/chat/simulate \
 - `/bug` — fluxo conversacional guiado
 - `/regressao` — checklist por módulos; marcar com `feito 1,3`
 
-## Scripts
+## Qualidade e testes (obrigatório antes de liberar)
+
+Sempre que houver mudança relevante, rode:
+
+```bash
+npm run validate:all
+```
+
+Isso executa:
+1. `typecheck` + `lint` + `jest` + `build`
+2. `smoke` contra o servidor em `http://localhost:3000`
+
+Smoke OpenAI real (consome tokens):
+
+```bash
+npm run smoke:openai
+```
 
 | Script | Descrição |
 |--------|-----------|
@@ -83,6 +99,10 @@ curl -X POST http://localhost:3000/api/chat/simulate \
 | `npm run build` / `npm start` | Produção |
 | `npm test` | Jest |
 | `npm run lint` | ESLint |
+| `npm run validate` | typecheck + lint + test + build |
+| `npm run smoke` | Smoke HTTP/dashboard/comandos |
+| `npm run smoke:openai` | Smoke com OpenAI real |
+| `npm run validate:all` | validate + smoke |
 | `npx prisma studio` | UI do banco |
 
 ## Docker

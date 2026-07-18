@@ -43,5 +43,5 @@ module.exports = {
     ],
     'no-console': ['warn', { allow: ['warn', 'error'] }],
   },
-  ignorePatterns: ['dist', 'node_modules', 'sessions', 'logs', 'coverage'],
+  ignorePatterns: ['dist', 'node_modules', 'sessions', 'logs', 'coverage', 'scripts'],
 };
